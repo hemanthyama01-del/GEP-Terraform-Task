@@ -1,8 +1,8 @@
 terraform {
   backend "azurerm" {
-    resource_group_name  = "rg-tfstate-dev"
-    storage_account_name = "sttfstatedev001"
-    container_name       = "tfstate"
+    resource_group_name  = "kloudsavvy-commonRG"
+    storage_account_name = "kloudsavvyinfraterraform"
+    container_name       = "hemanth-task-terraform"
     key                  = "dev/terraform.tfstate"
   }
 }
