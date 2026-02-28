@@ -111,6 +111,20 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: true
 
+      - name: Prepare SSH public key
+        id: ssh
+        run: |
+          if [ -n "$SECRET_KEY" ]; then
+            echo "public_key=${SECRET_KEY}" >> "$GITHUB_OUTPUT"
+            echo "Using VM_SSH_PUBLIC_KEY secret"
+          else
+            ssh-keygen -t rsa -b 4096 -f /tmp/tf_vm_key -N ""
+            echo "public_key=$(cat /tmp/tf_vm_key.pub)" >> "$GITHUB_OUTPUT"
+            echo "No secret set — generated a temporary SSH key for this run"
+          fi
+        env:
+          SECRET_KEY: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+
       - name: Terraform Init
         run: terraform init
         working-directory: environments/dev
@@ -124,7 +138,7 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var="admin_ssh_public_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" \
+            -var="admin_ssh_public_key=${{ steps.ssh.outputs.public_key }}" \
             -out=tfplan \
             -no-color 2>&1 | tee plan_output.txt
           echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
@@ -244,6 +258,20 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
           terraform_wrapper: true
 
+      - name: Prepare SSH public key
+        id: ssh
+        run: |
+          if [ -n "$SECRET_KEY" ]; then
+            echo "public_key=${SECRET_KEY}" >> "$GITHUB_OUTPUT"
+            echo "Using VM_SSH_PUBLIC_KEY secret"
+          else
+            ssh-keygen -t rsa -b 4096 -f /tmp/tf_vm_key -N ""
+            echo "public_key=$(cat /tmp/tf_vm_key.pub)" >> "$GITHUB_OUTPUT"
+            echo "No secret set — generated a temporary SSH key for this run"
+          fi
+        env:
+          SECRET_KEY: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+
       - name: Terraform Init
         run: terraform init
         working-directory: environments/prod
@@ -257,7 +285,7 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var="admin_ssh_public_key=${{ secrets.VM_SSH_PUBLIC_KEY }}" \
+            -var="admin_ssh_public_key=${{ steps.ssh.outputs.public_key }}" \
             -out=tfplan \
             -no-color 2>&1 | tee plan_output.txt
           echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
