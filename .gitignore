@@ -1,0 +1,46 @@
+# Terraform state files — NEVER commit these
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform lock / cache directories
+.terraform/
+.terraform.lock.hcl
+
+# Terraform plan files
+*.tfplan
+tfplan
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Sensitive variable files — use env vars or secrets manager
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local backend override (used for plan without remote state)
+backend_override.tf
+
+# .env files
+.env
+.env.*
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Pre-commit
+.secrets.baseline
+
+# Test outputs
+tests/vendor/
