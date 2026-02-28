@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Resource Group
 # ---------------------------------------------------------------------------
-resource "azurerm_resource_group" "this" {
+resource "azurerm_resource_group" "rg" {
   count    = var.create_resource_group ? 1 : 0
   name     = var.resource_group_name
   location = var.location
@@ -14,14 +14,14 @@ data "azurerm_resource_group" "existing" {
 }
 
 locals {
-  resource_group_name = var.create_resource_group ? azurerm_resource_group.this[0].name : data.azurerm_resource_group.existing[0].name
-  location            = var.create_resource_group ? azurerm_resource_group.this[0].location : data.azurerm_resource_group.existing[0].location
+  resource_group_name = var.create_resource_group ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.existing[0].name
+  location            = var.create_resource_group ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.existing[0].location
 }
 
 # ---------------------------------------------------------------------------
 # Virtual Network
 # ---------------------------------------------------------------------------
-resource "azurerm_virtual_network" "this" {
+resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
   resource_group_name = local.resource_group_name
   location            = local.location
@@ -41,12 +41,12 @@ resource "azurerm_virtual_network" "this" {
 # ---------------------------------------------------------------------------
 # Subnets
 # ---------------------------------------------------------------------------
-resource "azurerm_subnet" "this" {
+resource "azurerm_subnet" "subnet" {
   for_each = var.subnets
 
   name                 = each.key
   resource_group_name  = local.resource_group_name
-  virtual_network_name = azurerm_virtual_network.this.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = each.value.address_prefixes
   service_endpoints    = length(each.value.service_endpoints) > 0 ? each.value.service_endpoints : null
 
@@ -68,7 +68,7 @@ resource "azurerm_subnet" "this" {
 # ---------------------------------------------------------------------------
 # Network Security Groups
 # ---------------------------------------------------------------------------
-resource "azurerm_network_security_group" "this" {
+resource "azurerm_network_security_group" "nsg" {
   for_each = var.network_security_groups
 
   name                = each.key
@@ -95,9 +95,9 @@ resource "azurerm_network_security_group" "this" {
 # ---------------------------------------------------------------------------
 # NSG <-> Subnet Associations
 # ---------------------------------------------------------------------------
-resource "azurerm_subnet_network_security_group_association" "this" {
+resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
   for_each = var.nsg_subnet_associations
 
-  subnet_id                 = azurerm_subnet.this[each.key].id
-  network_security_group_id = azurerm_network_security_group.this[each.value].id
+  subnet_id                 = azurerm_subnet.subnet[each.key].id
+  network_security_group_id = azurerm_network_security_group.nsg[each.value].id
 }
