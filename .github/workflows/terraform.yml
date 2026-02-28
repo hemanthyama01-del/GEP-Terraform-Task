@@ -83,13 +83,13 @@ jobs:
         working-directory: environments/${{ matrix.environment }}
 
   # ─────────────────────────────────────────────
-  # 3. Plan (PR only)
+  # 3. Plan (PR + push to main)
   # ─────────────────────────────────────────────
   plan:
     name: "Plan — ${{ matrix.environment }}"
     needs: validate
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     strategy:
       fail-fast: false
       matrix:
@@ -140,7 +140,7 @@ jobs:
 
       - name: Post Plan to PR
         uses: actions/github-script@v7
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         with:
           script: |
             const fs = require('fs');
@@ -176,11 +176,16 @@ jobs:
           retention-days: 5
 
   # ─────────────────────────────────────────────
-  # 4. Apply (main branch, manual approval)
+  # 4. Apply (main branch only, after manual approval)
+  #
+  # APPROVAL GATE: Go to GitHub → Settings → Environments,
+  # create "dev-apply" and "prod-apply", and add Required Reviewers.
+  # The job will pause and wait for a reviewer to approve before
+  # terraform apply runs.
   # ─────────────────────────────────────────────
   apply:
     name: "Apply — ${{ matrix.environment }}"
-    needs: validate
+    needs: [validate, plan]   # plan MUST succeed before apply is allowed
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     strategy:
@@ -188,8 +193,9 @@ jobs:
       matrix:
         environment: [dev, prod]
 
-    # This environment has a "Required reviewers" protection rule configured
-    # in GitHub → Settings → Environments to enforce manual approval.
+    # !! Required Reviewers must be set on these environments in GitHub
+    # Settings → Environments → dev-apply / prod-apply
+    # Without that, apply will run immediately without any approval.
     environment: ${{ matrix.environment }}-apply
 
     steps:
