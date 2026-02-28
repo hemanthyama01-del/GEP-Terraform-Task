@@ -24,7 +24,9 @@ provider "azurerm" {
     }
   }
 
-  # Authentication is handled via environment variables:
-  # ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID
-  # or via Azure CLI / Managed Identity in CI/CD.
+  # Disable Azure CLI fallback — authentication is provided exclusively
+  # via ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID
+  # environment variables set by the CI/CD pipeline.
+  use_cli                    = false
+  skip_provider_registration = false
 }

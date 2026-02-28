@@ -28,4 +28,10 @@ provider "azurerm" {
       skip_shutdown_and_force_delete = false
     }
   }
+
+  # Disable Azure CLI fallback — authentication is provided exclusively
+  # via ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID
+  # environment variables set by the CI/CD pipeline.
+  use_cli                    = false
+  skip_provider_registration = false
 }
